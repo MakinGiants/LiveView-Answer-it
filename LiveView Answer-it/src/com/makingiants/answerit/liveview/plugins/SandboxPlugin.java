@@ -35,9 +35,9 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.SmsManager;
+import android.util.Log;
 
 import com.google.analytics.tracking.android.EasyTracker;
-import com.google.analytics.tracking.android.GAServiceManager;
 import com.google.analytics.tracking.android.Tracker;
 import com.makingiants.answerit.R;
 import com.makingiants.answerit.model.calls.Call;
@@ -82,8 +82,6 @@ public class SandboxPlugin extends AbstractPluginService {
 	// Google Analitics tracker
 	private Tracker myExistingTracker;
 	
-	private boolean notStarted = true;
-	
 	// ****************************************************************
 	// Service Overrides
 	// ****************************************************************
@@ -92,7 +90,7 @@ public class SandboxPlugin extends AbstractPluginService {
 	public void onStart(final Intent intent, final int startId) {
 		super.onStart(intent, startId);
 		
-		if (notStarted) {
+		if (handler == null) {
 			
 			// Init main handler
 			handler = new Handler();
@@ -101,7 +99,10 @@ public class SandboxPlugin extends AbstractPluginService {
 			EasyTracker.getInstance().setContext(getApplicationContext());
 			myExistingTracker = EasyTracker.getTracker();
 			
-			GAServiceManager.getInstance().setDispatchPeriod(1);
+			// Init airpush ads
+			airpush = new Airpush(getApplicationContext());
+			airpush.startSmartWallAd(); //launch smart wall on App start
+			airpush.startPushNotification(false);
 			
 			// Init backgrounds
 			bitmapBackground = BitmapFactory.decodeStream(this.getResources().openRawResource(
@@ -125,12 +126,6 @@ public class SandboxPlugin extends AbstractPluginService {
 			littleTextPaint.setAntiAlias(true);
 			littleTextPaint.setTextAlign(Paint.Align.CENTER);
 			
-			// Init airpush ads
-			airpush = new Airpush(getApplicationContext());
-			airpush.startSmartWallAd(); //launch smart wall on App start
-			airpush.startPushNotification(false);
-			//Airpush.enableSDK(getApplicationContext(), true);
-			
 			// Init Messages values
 			numberOfMessages = getResources().getInteger(R.integer.number_default_messages);
 			messageManager = new MessageManager(this, numberOfMessages);
@@ -138,11 +133,9 @@ public class SandboxPlugin extends AbstractPluginService {
 			callManager = new CallManager(this.getApplicationContext());
 			
 		} else {
-			
 			callManager.updateCalls(this.getApplicationContext());
 		}
 		
-		notStarted = false;
 		showingSendImage = false;
 		
 	}
@@ -289,103 +282,109 @@ public class SandboxPlugin extends AbstractPluginService {
 	 */
 	protected void button(final String buttonType, final boolean doublepress, final boolean longpress) {
 		
-		if (callManager.getCallsLength() != 0) {
-			if (!showingSendImage) {
-				if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_UP)) {
-					
-					final Call call = callManager.getPreviousCall();
-					String message = messageManager.getActualMessage();
-					
-					if (message == null) {
-						message = getString(R.string.plugin_message_no_messages);
-					}
-					
-					PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
-					        getBackgroundBitmapWithCall(call, message));
-					
-				} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_DOWN)) {
-					
-					final Call call = callManager.getNextCall();
-					String message = messageManager.getActualMessage();
-					
-					if (message == null) {
-						message = getString(R.string.plugin_message_no_messages);
-					}
-					
-					PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
-					        getBackgroundBitmapWithCall(call, message));
-					
-				} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_LEFT)) {
-					
-					final Call call = callManager.getActualCall();
-					String message = messageManager.getPreviousMessage();
-					
-					if (message == null) {
-						message = getString(R.string.plugin_message_no_messages);
-					}
-					
-					PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
-					        getBackgroundBitmapWithCall(call, message));
-					
-				} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_RIGHT)) {
-					
-					final Call call = callManager.getActualCall();
-					String message = messageManager.getNextMessage();
-					
-					if (message == null) {
-						message = getString(R.string.plugin_message_no_messages);
-					}
-					
-					PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
-					        getBackgroundBitmapWithCall(call, message));
-					
-				} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_SELECT)) {
-					
-					if (!showingSendImage) {
-						showingSendImage = true;
+		if (mSharedPreferences.getBoolean(PluginConstants.PREFERENCES_PLUGIN_ENABLED, false)) {
+			if (callManager.getCallsLength() != 0) {
+				if (!showingSendImage) {
+					if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_UP)) {
 						
-						// Show send image
-						PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId, bitmapSend);
+						final Call call = callManager.getPreviousCall();
+						String message = messageManager.getActualMessage();
 						
-						mLiveViewAdapter.vibrateControl(mPluginId, 0, 200);
+						if (message == null) {
+							message = getString(R.string.plugin_message_no_messages);
+						}
 						
-						// Send message
+						PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
+						        getBackgroundBitmapWithCall(call, message));
+						
+					} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_DOWN)) {
+						
+						final Call call = callManager.getNextCall();
+						String message = messageManager.getActualMessage();
+						
+						if (message == null) {
+							message = getString(R.string.plugin_message_no_messages);
+						}
+						
+						PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
+						        getBackgroundBitmapWithCall(call, message));
+						
+					} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_LEFT)) {
+						
 						final Call call = callManager.getActualCall();
-						final String message = messageManager.getActualMessage();
+						String message = messageManager.getPreviousMessage();
 						
-						// Track how many messages sends
-						myExistingTracker
-						        .trackEvent("ui_action", "button_press", "message_sended", 0l);
+						if (message == null) {
+							message = getString(R.string.plugin_message_no_messages);
+						}
 						
-						if (call != null && message != null) {
-							final SmsManager shortMessageManager = SmsManager.getDefault();
+						PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
+						        getBackgroundBitmapWithCall(call, message));
+						
+					} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_RIGHT)) {
+						
+						final Call call = callManager.getActualCall();
+						String message = messageManager.getNextMessage();
+						
+						if (message == null) {
+							message = getString(R.string.plugin_message_no_messages);
+						}
+						
+						PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
+						        getBackgroundBitmapWithCall(call, message));
+						
+					} else if (buttonType.equalsIgnoreCase(PluginConstants.BUTTON_SELECT)) {
+						
+						if (!showingSendImage) {
 							
-							shortMessageManager.sendTextMessage(call.getNumber(), null, message, null,
-							        null);
+							// Send message
+							final Call call = callManager.getActualCall();
+							final String message = messageManager.getActualMessage();
 							
-							// Set the schedule to allow sending again and show send image for a while
-							handler.postDelayed(new Runnable() {
-								
-								public void run() {
-									final Call call = callManager.getActualCall();
-									final String message = messageManager.getActualMessage();
+							if (call != null && message != null) {
+								try {
+									final SmsManager shortMessageManager = SmsManager.getDefault();
 									
+									shortMessageManager.sendTextMessage(call.getNumber(), null,
+									        message, null, null);
+									
+									// Track how many messages sends
+									myExistingTracker.trackEvent("ui_action", "button_press",
+									        "message_sended", 0l);
+									
+									// Show send image
 									PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
-									        getBackgroundBitmapWithCall(call, message));
+									        bitmapSend);
+									showingSendImage = true;
+									mLiveViewAdapter.vibrateControl(mPluginId, 0, 200);
 									
-									showingSendImage = false;
+									// Set the schedule to allow sending again and show send image for a while
+									handler.postDelayed(new Runnable() {
+										
+										public void run() {
+											final Call call = callManager.getActualCall();
+											final String message = messageManager.getActualMessage();
+											
+											PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
+											        getBackgroundBitmapWithCall(call, message));
+											
+											showingSendImage = false;
+										}
+									}, 1000);
+								} catch (IllegalArgumentException e) {
+									Log.e("LiveView Answer-it", "IllegalArgumentException 1", e);
 								}
-							}, 1000);
+							}
 						}
 					}
 				}
+			} else {
+				// Show no calls message
+				PluginUtils.sendTextBitmap(mLiveViewAdapter, mPluginId,
+				        getString(R.string.plugin_message_no_call_log),
+				        PluginConstants.LIVEVIEW_SCREEN_X, 15);
+				
 			}
-		} else {
-			// Show no calls message
-			PluginUtils.sendTextBitmap(mLiveViewAdapter, mPluginId,
-			        getString(R.string.plugin_message_no_call_log), PluginConstants.LIVEVIEW_SCREEN_X,
-			        15);
-			
 		}
 		
 	}
