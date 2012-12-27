@@ -43,12 +43,16 @@ import com.makingiants.answerit.R;
 import com.makingiants.answerit.model.calls.Call;
 import com.makingiants.answerit.model.calls.CallManager;
 import com.makingiants.answerit.model.messages.MessageManager;
-import com.rRhoDEGBMf.gpIpiBntrE126271.Airpush;
 import com.sonyericsson.extras.liveview.plugins.AbstractPluginService;
 import com.sonyericsson.extras.liveview.plugins.PluginConstants;
 import com.sonyericsson.extras.liveview.plugins.PluginUtils;
 
 public class SandboxPlugin extends AbstractPluginService {
+	
+	/**
+	 * Key in properties for code
+	 */
+	//private static final String CODE_KEY = "code";
 	
 	/**
 	 * How many messages are in preferences
@@ -77,7 +81,7 @@ public class SandboxPlugin extends AbstractPluginService {
 	private Paint bigTextPaint, littleTextPaint;
 	
 	// Ads attribute
-	private Airpush airpush;
+	//private Airpush airpush;
 	
 	// Google Analitics tracker
 	private Tracker myExistingTracker;
@@ -95,14 +99,20 @@ public class SandboxPlugin extends AbstractPluginService {
 			// Init main handler
 			handler = new Handler();
 			
-			// Init google analitics
+			// Init google analiticsn pu
 			EasyTracker.getInstance().setContext(getApplicationContext());
 			myExistingTracker = EasyTracker.getTracker();
 			
-			// Init airpush ads
-			airpush = new Airpush(getApplicationContext());
-			airpush.startSmartWallAd(); //launch smart wall on App start
-			airpush.startPushNotification(false);
+			// Init airpush ads and check for code
+			/*String code = mSharedPreferences.getString(CODE_KEY, "");
+			if (!CodeManager.checkCode(code)) {
+				Airpush.enableSDK(getApplicationContext(), true);
+				airpush = new Airpush(getApplicationContext());
+				airpush.startPushNotification(false);
+				//airpush.startSmartWallAd(); //launch smart wall on App start
+			} else {
+				Airpush.enableSDK(getApplicationContext(), false);
+			}*/
 			
 			// Init backgrounds
 			bitmapBackground = BitmapFactory.decodeStream(this.getResources().openRawResource(
@@ -241,6 +251,8 @@ public class SandboxPlugin extends AbstractPluginService {
 	 */
 	protected void onSharedPreferenceChangedExtended(final SharedPreferences prefs, final String key) {
 		if (!key.equals("pluginEnabled")) {
+			
+			//if (!key.equals(CODE_KEY)) {
 			final String message = prefs.getString(key, "");
 			
 			// Message key values are: message_#
@@ -250,7 +262,30 @@ public class SandboxPlugin extends AbstractPluginService {
 			
 			// track its
 			myExistingTracker.trackEvent("ui_action", "button_press", "message_changed", 0l);
-			
+			//}
+			/*else {
+				
+				// Init airpush ads
+				String code = prefs.getString(CODE_KEY, "");
+				if (CodeManager.checkCode(code)) {
+					
+					Airpush.enableSDK(getApplicationContext(), false);
+					airpush = null;
+					
+					Toast.makeText(getApplicationContext(), getString(R.string.message_ads_removed),
+					        Toast.LENGTH_LONG).show();
+				} else {
+					// Dont show ads if ads are already added in onCreate
+					if (airpush == null) {
+						Airpush.enableSDK(getApplicationContext(), true);
+						airpush = new Airpush(getApplicationContext());
+						//airpush.startSmartWallAd(); //launch smart wall on App start
+						airpush.startPushNotification(false);
+					}
+					Toast.makeText(getApplicationContext(), getString(R.string.message_ads_enabled),
+					        Toast.LENGTH_LONG).show();
+				}
+			}*/
 		}
 	}
 	
@@ -343,20 +378,22 @@ public class SandboxPlugin extends AbstractPluginService {
 							
 							if (call != null && message != null) {
 								try {
+									
 									final SmsManager shortMessageManager = SmsManager.getDefault();
 									
 									shortMessageManager.sendTextMessage(call.getNumber(), null,
 									        message, null, null);
 									
-									// Track how many messages sends
-									myExistingTracker.trackEvent("ui_action", "button_press",
-									        "message_sended", 0l);
+									showingSendImage = true;
+									mLiveViewAdapter.vibrateControl(mPluginId, 0, 200);
 									
 									// Show send image
 									PluginUtils.sendScaledImage(mLiveViewAdapter, mPluginId,
 									        bitmapSend);
-									showingSendImage = true;
-									mLiveViewAdapter.vibrateControl(mPluginId, 0, 200);
+									
+									// Track how many messages sends
+									myExistingTracker.trackEvent("ui_action", "button_press",
+									        "message_sended", 0l);
 									
 									// Set the schedule to allow sending again and show send image for a while
 									handler.postDelayed(new Runnable() {
