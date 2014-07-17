@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Answer-it</string>
-    <!-- The following strings needs to be defined in order for the Plugin to function. -->
-    <string name="pluginname">Answer-it</string>
-    <string name="intent_preferences">com.makingiants.answerit.liveview.plugins.PREFERENCES</string>
-    <string name="intent_service">com.makingiants.answerit.liveview.plugins.answeritservice</string>
-    <string name="application_description">Extends:com.sonyericsson.extras.liveview</string>
-    <string name="message_ads_removed">Thanks for donation, ads removed now</string>
-    <string name="message_ads_enabled">The code is not corret, check it or donate to get a valid one</string>
+    <string name="app_name" translatable="false">Answer-it</string>
+    <string name="pluginname" translatable="false">Answer-it</string>
+    <string name="intent_preferences" translatable="false">com.makingiants.answerit.liveview.plugins.PREFERENCES</string>
+    <string name="intent_service" translatable="false">com.makingiants.answerit.liveview.plugins.answeritservice</string>
+    <string name="application_description" translatable="false">Extends:com.sonyericsson.extras.liveview</string>
+    <!-- UI -->
     <string name="conf_enabled_info">Enabled</string>
-    <string name="conf_code">Code to remove ads</string>
-    <string name="default_code">Donate to get this code and remove ads</string>
     <string name="conf_message_1_info">Message 1</string>
     <string name="conf_message_2_info">Message 2</string>
     <string name="conf_message_3_info">Message 3</string>
@@ -34,5 +30,12 @@
     <string name="default_message_8">I’m playin, I’ll die if answer! call you later</string>
     <string name="default_message_9">I’m busy, call you later</string>
     <string name="default_message_10">Call you later</string>
+
+    <!-- In app Billing -->
+    <string name="in_app_key" translatable="false">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxVeqKEIS6jUJt+lffViKy9Uv119y2N+aNDieQf8dOGacll+94T1IORveXeuvCZskd3hQbi5Vw+c+aw5R+JZ/9cr91OTLFvz4iyVpJe7Jbp/ga0QoggEW6VNYEjCwHW/6M31Q7Tisu5z60OHMJHCNs2uUTt4DWvSlX8S7leqlewyDgqltCjGTzVnjP/ToUzQKz8mJHRuNMODbzfMts1YYsCuq5ir4G7YOqHqoRBlbLuVZe5lB7cN/TMIGFW67JlF2Ei9CE10V2pg3kO/sfl3Zr3fETeVxU65wlQ/UZatGPh0zukPBY1ICJj/QQJkTjc8K6jJx/Q4DfBXLVue1xYEFIQIDAQAB</string>
+    <string name="in_app_message_error" translatable="false">There is an error with the donation, please wait 5 minutes and try again, 5 minutes is not much! :P</string>
+    <string name="conf_in_app_title">Help us!</string>
+    <string name="conf_in_app_summary">Give food and drinks to develop better apps!</string>
+    <string name="in_app_message_thanks">Thanks for giving! now we can do more apps!</string>
 
 </resources>
